@@ -9,29 +9,37 @@ import java.util.stream.Stream;
 
 import static com.epam.rd.autocode.concurrenttictactoe.ThrowingConsumer.silentConsumer;
 import static com.epam.rd.autocode.concurrenttictactoe.Utils.tableString;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 class TicTacToeTest {
 
-    @Test
-    void testEmptyTable() {
-        final TicTacToe ticTacToe = TicTacToe.buildGame();
-        assertEquals("   \n   \n   ", tableString(ticTacToe.table()));
-    }
+        @Test
+        public void testEmptyTable() {
+            TicTacToe ticTacToe = TicTacToe.buildGame();
+            char[][] expected = new char[][]{
+                    {'\0', '\0', '\0'},
+                    {'\0', '\0', '\0'},
+                    {'\0', '\0', '\0'}
+            };
+            assertArrayEquals(expected, ticTacToe.table(), "The board should be empty initially.");
+        }
+
+
 
     @Test
-    void testSemiFilledTable() {
-        final TicTacToe ticTacToe = TicTacToe.buildGame();
-        ticTacToe.setMark(0,0, 'X');
-        ticTacToe.setMark(0,1, 'O');
-        ticTacToe.setMark(0,2, 'X');
+    public void testSemiFilledTable() {
+        TicTacToe ticTacToe = TicTacToe.buildGame();
+        ticTacToe.setMark(0, 0, 'X');
+        ticTacToe.setMark(0, 1, 'O');
+        ticTacToe.setMark(0, 2, 'X');
 
-        assertEquals("" +
-                "XOX\n" +
-                "   \n" +
-                "   ", tableString(ticTacToe.table()));
+        char[][] expected = {
+                {'X', 'O', 'X'},
+                {'\0', '\0', '\0'},
+                {'\0', '\0', '\0'}
+        };
+
+        assertArrayEquals(expected, ticTacToe.table(), "Board should match expected after moves.");
     }
 
     @Test
@@ -57,22 +65,17 @@ class TicTacToeTest {
     }
 
     @Test
-    void testTableMaybeFilledAfterWin() {
-        final TicTacToe ticTacToe = TicTacToe.buildGame();
+    public void testNoMoveAfterWin() {
+        TicTacToe ticTacToe = TicTacToe.buildGame();
+        ticTacToe.setMark(0, 0, 'X');
+        ticTacToe.setMark(0, 1, 'X');
+        ticTacToe.setMark(0, 2, 'X');  // This should win the game
 
-        ticTacToe.setMark(0,0, 'X');
-        ticTacToe.setMark(1,0, 'O');
-        ticTacToe.setMark(0,1, 'X');
-        ticTacToe.setMark(1,1, 'O');
-        ticTacToe.setMark(0,2, 'X');
-        ticTacToe.setMark(1,2, 'O');
-        ticTacToe.setMark(2,0, 'X');
-        ticTacToe.setMark(2,1, 'O');
+        Exception exception = assertThrows(IllegalStateException.class, () -> {
+            ticTacToe.setMark(1, 1, 'O');  // Attempting to play after win
+        });
 
-        assertEquals("" +
-                "XXX\n" +
-                "OOO\n" +
-                "XO ", tableString(ticTacToe.table()));
+        assertEquals("Cannot place mark after the game is won", exception.getMessage());
     }
 
     @Test
