@@ -1,9 +1,12 @@
 package com.epam.rd.autocode.concurrenttictactoe;
 
-public class PlayerImpl implements Player {
-    private final TicTacToe ticTacToe;
-    private final char mark;
-    private final PlayerStrategy strategy;
+
+import java.util.Map;
+
+public class PlayerImpl implements Player{
+    private TicTacToe ticTacToe;
+    char mark;
+    PlayerStrategy strategy;
 
     public PlayerImpl(TicTacToe ticTacToe, char mark, PlayerStrategy strategy) {
         this.ticTacToe = ticTacToe;
@@ -13,25 +16,41 @@ public class PlayerImpl implements Player {
 
     @Override
     public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
-            try {
-                synchronized (ticTacToe) {
-                    if (ticTacToe.lastMark() != mark) {
-                        Move move = strategy.computeMove(mark, ticTacToe);
-                        if (move != null) {
-                            ticTacToe.setMark(move.row, move.column, mark);
-                            ticTacToe.notifyAll(); // Notify other player's thread
-                        }
-                    }
+        while (true) {
+            synchronized (ticTacToe) {
+                if (!checkIfGotChance(ticTacToe.table())){
+                    break;
                 }
-                Thread.sleep(10); // Prevent tight loop, simulate thinking
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+                if (ticTacToe.lastMark() == mark) {
+
+//
+                }
+                else   {
+                    // other player has already made a move, so exit
+                    Move move = strategy.computeMove(mark, ticTacToe);
+                    ticTacToe.setMark(move.row, move.column, mark);
+
+//     
+                }
+            }
+        }
+        Map<Thread, StackTraceElement[]> threads = Thread.getAllStackTraces();
+        for (Thread thread : threads.keySet()) {
+            if (thread.getName().contains("Thread")) {
+                thread.interrupt();
             }
         }
     }
 
-    public static Player createPlayer(TicTacToe ticTacToe, char mark, PlayerStrategy strategy) {
-        return new PlayerImpl(ticTacToe, mark, strategy);
+    private synchronized boolean checkIfGotChance(char[][] table) {
+        return !(table[0][2] == table[1][1] && table[1][1] == table[2][0] && table[1][1] != ' '||
+                table[0][0] == table[1][1] && table[1][1] == table[2][2] && table[1][1] != ' ' ||
+                table[0][0] == table[0][1] && table[0][1] == table[0][2] && table[0][1] != ' ' ||
+                table[1][0] == table[1][1] && table[1][1] == table[1][2] && table[1][1] != ' ' ||
+                table[2][0] == table[2][1] && table[2][1] == table[2][2] && table[2][1] != ' ' ||
+                table[0][0] == table[1][0] && table[1][0] == table[2][0] && table[1][0] != ' ' ||
+                table[0][1] == table[1][1] && table[1][1] == table[2][1] && table[1][1] != ' ' ||
+                table[0][2] == table[1][2] && table[1][2] == table[2][2] && table[1][2] != ' ');
     }
+
 }
