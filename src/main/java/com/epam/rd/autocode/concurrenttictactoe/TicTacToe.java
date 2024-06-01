@@ -24,7 +24,6 @@ public interface TicTacToe {
     char lastMark();
 
     static TicTacToe buildGame() {
-        return new TicTacToeImpl();
-
+        return ConcurrentTicTacToe.buildGame();
     }
 }
